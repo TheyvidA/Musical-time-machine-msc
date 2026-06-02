@@ -62,22 +62,40 @@ if st.button("🚀 Travel Through Time"):
 
                 if not vintage_pool.empty:
                     # Run k-NN
+                    # Run k-NN (Get top 4 just in case we need to skip a duplicate)
                     knn = NearestNeighbors(n_neighbors=4, metric='euclidean')
                     knn.fit(vintage_pool[features])
                     distances, indices = knn.kneighbors(source_vector)
-
+                    
                     # Display Results
                     st.success("Time Jump Successful!")
-                    st.markdown(
-                        f"**Source Track:** *{source_info['track_name']}* by {source_info['artists_name']} ({int(source_info['year'])})")
+                    st.markdown(f"**Source Track:** *{source_info['track_name']}* by {source_info['artists_name']} ({int(source_info['year'])})")
                     st.divider()
-
+                    
                     st.subheader(f"Top Matches from the {target_decade}s:")
-
-                    for i in range(1, 4):
+                    
+                    # Track how many valid matches we've shown
+                    matches_shown = 0 
+                    
+                    # Loop through the results, starting at 0 (the absolute closest)
+                    for i in range(len(indices[0])):
+                        if matches_shown >= 3:
+                            break # Stop once we have 3 good recommendations
+                            
                         match_idx = vintage_pool.index[indices[0][i]]
                         matched_song = df.loc[match_idx]
                         dist_score = round(distances[0][i], 4)
-
-                        st.info(
-                            f"🎵 **{matched_song['track_name']}** by {matched_song['artists_name']} ({int(matched_song['year'])})  \n*Distance Score: {dist_score}*")
+                        
+                        # Prevent the algorithm from recommending the exact same song
+                        if matched_song['track_name'].lower() == source_info['track_name'].lower():
+                            continue 
+                            
+                        matches_shown += 1
+                        
+                        # UI formatting to highlight the best match
+                        if matches_shown == 1:
+                            st.info(f"🥇 **#1 CLOSEST MATCH:** {matched_song['track_name']} by {matched_song['artists_name']} ({int(matched_song['year'])})  \n*Distance Score: {dist_score}*")
+                        elif matches_shown == 2:
+                            st.success(f"🥈 **#2 Match:** {matched_song['track_name']} by {matched_song['artists_name']} ({int(matched_song['year'])})  \n*Distance Score: {dist_score}*")
+                        else:
+                            st.warning(f"🥉 **#3 Match:** {matched_song['track_name']} by {matched_song['artists_name']} ({int(matched_song['year'])})  \n*Distance Score: {dist_score}*")
