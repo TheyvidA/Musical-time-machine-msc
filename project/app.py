@@ -13,7 +13,14 @@ st.write("Find the historical sonic twin of any modern track.")
 # 2. Load and Cache Data (Crucial for the 3.0s latency target!)
 @st.cache_data
 def load_data():
-    df = pd.read_csv('spotify_master_cleaned.csv')
+    # Get the exact directory where app.py is located
+    current_dir = os.path.dirname(os.path.abspath(__file__))
+
+    # Build the path to the CSV file dynamically
+    csv_path = os.path.join(current_dir, 'spotify_master_cleaned.csv')
+
+    # Load the data
+    df = pd.read_csv(csv_path)
     return df
 
 
