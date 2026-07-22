@@ -61,7 +61,7 @@ def load_data():
     current_dir = os.path.dirname(os.path.abspath(__file__))
 
     # Build the path to the CSV file dynamically
-    csv_path = os.path.join(current_dir, 'spotify_master_cleaned.csv')
+    csv_path = os.path.join(current_dir, 'data', 'spotify_master_cleaned.csv')
     
     # Load the path
     df = pd.read_csv(csv_path)
