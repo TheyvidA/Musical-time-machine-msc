@@ -3,6 +3,7 @@ import pandas as pd
 import numpy as np
 import plotly.graph_objects as go
 import time
+import os
 import itertools
 from sklearn.preprocessing import MinMaxScaler
 from sklearn.neighbors import NearestNeighbors
@@ -29,7 +30,7 @@ st.markdown("""
                     text-transform: uppercase; letter-spacing:.04em; }
     .result-title { font-size: 1rem; font-weight: 600; color: #1a3c6e; margin-top:2px; }
     .result-sub { font-size: 0.82rem; color: #555; margin-top: 2px; }
-    .result-scores { font-size: 0.77rem; color: #888; margin-top: 5px; }
+    .result-scores{ font-size: 0.77rem; color: #888; margin-top: 5px; }
     .source-card {
         background: #eef3fb; border: 1px solid #c0d0ea;
         border-radius: 10px; padding: 14px 16px; margin-bottom: 14px;
@@ -56,7 +57,14 @@ DECADE_OPTIONS = {
 # Load and cache data
 @st.cache_data
 def load_data():
-    df = pd.read_csv("spotify_master_cleaned.csv")
+    # Get the exact directory where app.py is located
+    current_dir = os.path.dirname(os.path.abspath(__file__))
+
+    # Build the path to the CSV file dynamically
+    csv_path = os.path.join(current_dir, 'spotify_master_cleaned.csv')
+    
+    # Load the path
+    df = pd.read_csv(csv_path)
     df['decade'] = (df['year'] // 10 * 10).astype(int)
     return df
 
@@ -88,7 +96,7 @@ with st.sidebar:
     st.caption("**Validation:** Cosine Similarity · ILS · Random Baseline")
 
 # Header + inputs
-st.title("⏰The Musical Time Machine")
+st.title("🎵The Musical Time Machine")
 st.write("Search for a song by name and artist, select a target decade, and discover its closest sonic match from the past.")
 st.divider()
 
@@ -118,7 +126,9 @@ if run:
             if artist_input.strip():
                 mask = mask & df_scaled['artists_name'].str.contains(
                     artist_input, case=False, regex=False)
+
             match = df_scaled[mask]
+
             if match.empty:
                 st.error(
                     f"No match found for **'{track_input}'**"
@@ -138,6 +148,7 @@ if run:
             knn = NearestNeighbors(n_neighbors=4, metric='euclidean')
             knn.fit(decade_pool[FEATURES])
             distances, indices = knn.kneighbors(source_vector)
+
             elapsed_ms = round((time.perf_counter() - t0) * 1000, 1)
 
             # Collect top 3 results + their feature vectors
@@ -180,7 +191,7 @@ if run:
         # SECTION A — Status + metric cards
         lc = "green" if elapsed_ms < 3000 else "red"
         st.success(
-            f"Time jump successful! ✅ · Response time: :{lc}[**{elapsed_ms} ms**]")
+            f"Time jump successful! ✅  ·  Response time: :{lc}[**{elapsed_ms} ms**]")
 
         c1, c2, c3, c4 = st.columns(4)
         c1.markdown(f"""<div class="metric-box">
@@ -296,9 +307,9 @@ if run:
             use_container_width=True,
             hide_index=True,
             column_config={
-                "Feature": st.column_config.TextColumn("Feature"),
+                "Feature":    st.column_config.TextColumn("Feature"),
                 "Your Track": st.column_config.NumberColumn("Your Track", format="%.3f"),
-                "Top Match": st.column_config.NumberColumn("Top Match", format="%.3f"),
+                "Top Match":  st.column_config.NumberColumn("Top Match",  format="%.3f"),
                 "Difference": st.column_config.NumberColumn("Difference", format="%.3f"),
                 "Similarity": st.column_config.TextColumn("Similarity"),
             }
@@ -329,19 +340,19 @@ if run:
         )
 
         if feat_select:
-            decade_labels = [f"{int(d)}s" for d in decade_agg['decade']]
+            decade_labels  = [f"{int(d)}s" for d in decade_agg['decade']]
             src_decade_label = f"{int((source_row['year'] // 10) * 10)}s"
 
             # High-contrast, colourblind-friendly palette — each feature
             # gets a distinct colour, line style AND marker shape so they
             # are distinguishable even in greyscale print
             FEAT_STYLES = {
-                'energy': dict(color='#E63946', dash='solid', symbol='circle', width=3),
-                'valence': dict(color='#2196F3', dash='solid', symbol='square', width=3),
-                'acousticness': dict(color='#4CAF50', dash='dash', symbol='diamond', width=3),
-                'danceability': dict(color='#FF9800', dash='dot', symbol='triangle-up', width=3),
-                'tempo': dict(color='#9C27B0', dash='dashdot',symbol='cross', width=3),
-                'loudness': dict(color='#00BCD4', dash='longdash',symbol='star', width=3),
+                'energy': dict(color='#E63946', dash='solid', symbol='circle',        width=3),
+                'valence': dict(color='#2196F3', dash='solid', symbol='square',        width=3),
+                'acousticness': dict(color='#4CAF50', dash='dash', symbol='diamond',       width=3),
+                'danceability': dict(color='#FF9800', dash='dot', symbol='triangle-up',   width=3),
+                'tempo': dict(color='#9C27B0', dash='dashdot',symbol='cross',         width=3),
+                'loudness': dict(color='#00BCD4', dash='longdash',symbol='star',         width=3),
             }
 
             trend_fig = go.Figure()
@@ -400,7 +411,7 @@ if run:
                 annotations.append(dict(
                     x=src_decade_label, y=1.06,
                     xref='x', yref='paper',
-                    text=f"{source_row['track_name'][:22]}'s decade",
+                    text=f"📍 {source_row['track_name'][:22]}'s decade",
                     showarrow=False,
                     font=dict(size=11, color='#555'),
                     bgcolor='rgba(255,235,59,0.6)',
@@ -414,7 +425,7 @@ if run:
                 ),
                 yaxis=dict(
                     range=[0, 1],
-                    title="Feature Value (0 = low  →  1 = high)",
+                    title="Feature Value  (0 = low  →  1 = high)",
                     gridcolor='#e8e8e8',
                     tickformat='.1f'
                 ),
@@ -497,7 +508,7 @@ if run:
 
         loud_fig.update_layout(
             yaxis=dict(
-                title="Loudness increase compared to 1970s (dB)",
+                title="Loudness increase compared to 1970s  (dB)",
                 gridcolor='#e8e8e8',
                 tickprefix='+',
                 tickformat='.0f'
